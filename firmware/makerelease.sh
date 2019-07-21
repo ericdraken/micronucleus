@@ -1,9 +1,14 @@
+#!/bin/sh
+
 make clean
 make CONFIG=t84_default
 cp main.hex releases/t84_default.hex
 make clean
 make CONFIG=t85_default
 cp main.hex releases/t85_default.hex
+make clean
+make CONFIG=t85_apa106_entry_jumper_pb0
+cp main.hex releases/t85_apa106_entry_jumper_pb0.hex
 make clean
 make CONFIG=t45_default
 cp main.hex releases/t45_default.hex
