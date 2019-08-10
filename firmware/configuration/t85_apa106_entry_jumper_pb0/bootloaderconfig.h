@@ -4,14 +4,14 @@
  * according to the hardware.
  * 
  * Controller type: ATtiny 85 - 16.5 MHz
- * Configuration:   Default configuration
+ * Configuration:   APA106 shut-off and entry jumper configuration
  *       USB D- :   PB3
  *       USB D+ :   PB4
- *       Entry  :   Always
+ *       Entry  :   Entry Jumper
  *       LED    :   None
  *       OSCCAL :   Stays at 16 MHz
  * Note: Uses 16.5 MHz V-USB implementation with PLL
- * Last Change:     Mar 16,2014
+ * Last Change:     July 21, 2019
  *
  * License: GNU GPL v2 (see License.txt
  */
@@ -151,17 +151,21 @@
   #define bootLoaderExit()   { \
     /* Original exit code */ \
     JUMPER_PORT &= ~_BV(JUMPER_PIN); \
-    /* https://cdn.sparkfun.com/datasheets/Components/LED/COM-12877.pdf */ \
-    /* Set the APA106 low for 50us to reset the LED */ \
-    LED_DDR  |= _BV(LED_PIN); \
-    LED_PORT &= ~_BV(LED_PIN); \
-    _delay_us(50); \
-    /* Set the the next 3 bytes (24 bits) "low" to turn the APA106 off */ \
-    for ( uint16_t bits = 0; bits < 24; bits++ ) { \
-        LED_PORT |= _BV(LED_PIN); \
-        _delay_us(0.35);   /* High */ \
+    /* Set the register for APA106 work */ \
+    LED_DDR |= _BV(LED_PIN); \
+    /* Try many times to compensate for spurious APA106 states */ \
+    for ( uint8_t tries = 0; tries < 100; tries++ ) { \
+        /* Data sheet: https://cdn.sparkfun.com/datasheets/Components/LED/COM-12877.pdf */ \
+        /* Set the APA106 low for 50us to reset the LED to accept a color */ \
         LED_PORT &= ~_BV(LED_PIN); \
-        _delay_us(1.36);   /* Low */ \
+        _delay_us(80); \
+        /* Set the the next 3 bytes (24 bits) "low" to turn the APA106 off */ \
+        for ( uint16_t bits = 0; bits < 24; bits++ ) { \
+            LED_PORT |= _BV(LED_PIN); \
+            _delay_us(0.35);   /* High */ \
+            LED_PORT &= ~_BV(LED_PIN); \
+            _delay_us(1.36);   /* Low */ \
+        } \
     } \
 }
 #else
